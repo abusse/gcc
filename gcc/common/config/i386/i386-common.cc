@@ -2468,6 +2468,8 @@ const pta processor_alias_table[] =
     PTA_BTVER2,
     M_CPU_TYPE (AMD_BTVER2), P_PROC_BMI},
 
+  {"knc", PROCESSOR_PENTIUM, CPU_GENERIC,
+    PTA_64BIT | PTA_NO_SAHF, 0, P_NONE},
   {"generic", PROCESSOR_GENERIC, CPU_GENERIC,
     PTA_64BIT
       | PTA_HLE /* flags are only used for -march switch.  */,
