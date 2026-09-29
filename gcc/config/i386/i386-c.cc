@@ -63,6 +63,8 @@ ix86_target_macros_internal (HOST_WIDE_INT isa_flag,
     case PROCESSOR_LAKEMONT:
       /* Intel MCU is based on Intel Pentium CPU.  */
     case PROCESSOR_PENTIUM:
+      if (TARGET_64BIT)
+        break;
       def_or_undef (parse_in, "__i586");
       def_or_undef (parse_in, "__i586__");
       def_or_undef (parse_in, "__pentium");
@@ -337,6 +339,8 @@ ix86_target_macros_internal (HOST_WIDE_INT isa_flag,
       def_or_undef (parse_in, "__tune_i486__");
       break;
     case PROCESSOR_PENTIUM:
+      if (TARGET_64BIT)
+        break;
       def_or_undef (parse_in, "__tune_i586__");
       def_or_undef (parse_in, "__tune_pentium__");
       if (last_tune_char == 'x')
@@ -636,6 +640,11 @@ ix86_target_macros_internal (HOST_WIDE_INT isa_flag,
     def_or_undef (parse_in, "__FMA__");
   if (isa_flag & OPTION_MASK_ISA_RTM)
     def_or_undef (parse_in, "__RTM__");
+  if (isa_flag2 & OPTION_MASK_ISA2_KNC) {
+    def_or_undef (parse_in, "__KNC__");
+    def_or_undef (parse_in, "__k1om"),
+    def_or_undef (parse_in, "__k1om__");
+  }
   if (isa_flag & OPTION_MASK_ISA_SSE4A)
     def_or_undef (parse_in, "__SSE4A__");
   if (isa_flag & OPTION_MASK_ISA_FMA4)

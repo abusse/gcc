@@ -2490,6 +2490,8 @@ const pta processor_alias_table[] =
     PTA_C86_4G_M8,
     M_CPU_SUBTYPE (HYGONFAM18H_C86_4G_M8), P_PROC_AVX512F},
 
+  {"knc", PROCESSOR_PENTIUM, CPU_GENERIC,
+    PTA_64BIT | PTA_NO_SAHF, 0, P_NONE},
   {"generic", PROCESSOR_GENERIC, CPU_GENERIC,
     PTA_64BIT
       | PTA_HLE /* flags are only used for -march switch.  */,
