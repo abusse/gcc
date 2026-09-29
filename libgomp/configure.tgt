@@ -77,7 +77,7 @@ if test x$enable_linux_futex = xyes; then
 	;;
 
     # Note that bare i386 is not included here.  We need cmpxchg.
-    i[456]86-*-linux* | x86_64-*-linux*)
+    i[456]86-*-linux* | x86_64-*-linux* | k1om-*-linux*)
 	config_path="linux/x86 linux posix"
 	cat > conftestx.c <<EOF
 #ifndef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
