@@ -1411,7 +1411,7 @@
 ;; Return true if OP is a memory operand, aligned to
 ;; less than its natural alignment.
 (define_predicate "misaligned_operand"
-  (and (match_code "mem")
+  (and (match_operand 0 "memory_operand")
        (match_test "MEM_ALIGN (op) < GET_MODE_BITSIZE (mode)")))
 
 ;; Return true if OP is a vzeroall operation, known to be a PARALLEL.
@@ -1679,3 +1679,7 @@
     }
   return (i >= 12 && i <= 18);
 })
+
+(define_predicate "mem_align_or_reg_operand"
+  (ior (match_operand 0 "register_operand")
+       (match_operand 0 "aligned_operand")))
