@@ -5059,7 +5059,7 @@ case "${target}" in
 
     # Some targets support both -fPIC and -fpic, but prefer the latter.
     # FIXME: Why?
-    i[34567]86-*-* | x86_64-*-*)
+    i[34567]86-*-* | x86_64-*-* | k1om-*-*)
 	PICFLAG_FOR_TARGET=-fpic
 	;;
     # FIXME: Override -fPIC default in libgcc only?
@@ -7480,7 +7480,7 @@ Valid choices are 'yes', 'bid', 'dpd', and 'no'." "$LINENO" 5 ;;
 else
 
   case $target in
-    powerpc*-*-linux* | i?86*-*-linux* | x86_64*-*-linux* | s390*-*-linux* | \
+    powerpc*-*-linux* | i?86*-*-linux* | x86_64*-*-linux* | k1om*-*-linux* | s390*-*-linux* | \
     i?86*-*-elfiamcu | i?86*-*-gnu* | \
     i?86*-*-mingw* | x86_64*-*-mingw* | \
     i?86*-*-cygwin* | x86_64*-*-cygwin*)
@@ -7500,7 +7500,7 @@ fi
 case x$enable_decimal_float in
   xyes)
     case $target in
-      i?86*-*-* | x86_64*-*-*)
+      i?86*-*-* | x86_64*-*-*| k1om*-*-*)
 	enable_decimal_float=bid
 	;;
       *)
@@ -14215,7 +14215,7 @@ ia64-*-hpux*)
   rm -rf conftest*
   ;;
 
-x86_64-*kfreebsd*-gnu|x86_64-*linux*|powerpc*-*linux*| \
+x86_64-*kfreebsd*-gnu|x86_64-*linux*|k1om-*linux*|powerpc*-*linux*| \
 s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
   # Find out which ABI we are using.
   echo 'int i;' > conftest.$ac_ext
@@ -14259,7 +14259,7 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
 	  x86_64-*kfreebsd*-gnu)
 	    LD="${LD-ld} -m elf_x86_64_fbsd"
 	    ;;
-	  x86_64-*linux*)
+	  x86_64-*linux*|k1om-*linux*)
 	    LD="${LD-ld} -m elf_x86_64"
 	    ;;
 	  powerpcle-*linux*)

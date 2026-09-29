@@ -142,7 +142,7 @@ using namespace __sanitizer;  // NOLINT
 # define THREADLOCAL   __thread
 # define LIKELY(x)     __builtin_expect(!!(x), 1)
 # define UNLIKELY(x)   __builtin_expect(!!(x), 0)
-# if defined(__i386__) || defined(__x86_64__)
+# if (defined(__i386__) || defined(__x86_64__)) && (!defined(__KNC__))
 // __builtin_prefetch(x) generates prefetchnt0 on x86
 #  define PREFETCH(x) __asm__("prefetchnta (%0)" : : "r" (x))
 # else
