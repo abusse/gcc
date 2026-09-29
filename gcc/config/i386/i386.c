@@ -1983,6 +1983,84 @@ struct processor_costs intel_cost = {
   1,					/* cond_not_taken_branch_cost.  */
 };
 
+/* Specical cost for KNC. Avoid SSE register stores. Stringops
+   algorithms are specified for 64-bit also. */
+
+static stringop_algs knc_memcpy[2] = {
+  {libcall, {{256, rep_prefix_4_byte, false}, {-1, libcall, false}}},
+  {libcall, {{32, loop, false}, {8192, rep_prefix_8_byte, false}, {-1, libcall, false}}}};
+static stringop_algs knc_memset[2] = {
+  {libcall, {{-1, rep_prefix_4_byte, false}}},
+  {libcall, {{32, loop, false}, {8192, rep_prefix_8_byte, false}, {-1, libcall, false}}}};
+
+static const
+struct processor_costs knc_cost = {
+  COSTS_N_INSNS (1),			/* cost of an add instruction */
+  COSTS_N_INSNS (1),			/* cost of a lea instruction */
+  COSTS_N_INSNS (4),			/* variable shift costs */
+  COSTS_N_INSNS (1),			/* constant shift costs */
+  {COSTS_N_INSNS (11),			/* cost of starting multiply for QI */
+   COSTS_N_INSNS (11),			/*				 HI */
+   COSTS_N_INSNS (11),			/*				 SI */
+   COSTS_N_INSNS (11),			/*				 DI */
+   COSTS_N_INSNS (11)},			/*			      other */
+  0,					/* cost of multiply per each bit set */
+  {COSTS_N_INSNS (25),			/* cost of a divide/mod for QI */
+   COSTS_N_INSNS (25),			/*			    HI */
+   COSTS_N_INSNS (25),			/*			    SI */
+   COSTS_N_INSNS (25),			/*			    DI */
+   COSTS_N_INSNS (25)},			/*			    other */
+  COSTS_N_INSNS (3),			/* cost of movsx */
+  COSTS_N_INSNS (2),			/* cost of movzx */
+  8,					/* "large" insn */
+  6,					/* MOVE_RATIO */
+  6,				     /* cost for loading QImode using movzbl */
+  {2, 4, 2},				/* cost of loading integer registers
+					   in QImode, HImode and SImode.
+					   Relative to reg-reg move (2).  */
+  {2, 4, 2},				/* cost of storing integer registers */
+  2,					/* cost of reg,reg fld/fst */
+  {2, 2, 6},				/* cost of loading fp registers
+					   in SFmode, DFmode and XFmode */
+  {4, 4, 6},				/* cost of storing fp registers
+					   in SFmode, DFmode and XFmode */
+  8,					/* cost of moving MMX register */
+  {8, 8},				/* cost of loading MMX registers
+					   in SImode and DImode */
+  {8, 8},				/* cost of storing MMX registers
+					   in SImode and DImode */
+  2,					/* cost of moving SSE register */
+  {4, 8, 16},				/* cost of loading SSE registers
+					   in SImode, DImode and TImode */
+  {4096, 4096, 4096},			/* cost of storing SSE registers
+					   in SImode, DImode and TImode */
+  4096,					/* MMX or SSE register to integer */
+  8,					/* size of l1 cache.  */
+  8,					/* size of l2 cache  */
+  0,					/* size of prefetch block */
+  0,					/* number of parallel prefetches */
+  2,					/* Branch cost */
+  COSTS_N_INSNS (3),			/* cost of FADD and FSUB insns.  */
+  COSTS_N_INSNS (3),			/* cost of FMUL instruction.  */
+  COSTS_N_INSNS (39),			/* cost of FDIV instruction.  */
+  COSTS_N_INSNS (1),			/* cost of FABS instruction.  */
+  COSTS_N_INSNS (1),			/* cost of FCHS instruction.  */
+  COSTS_N_INSNS (70),			/* cost of FSQRT instruction.  */
+  knc_memcpy,
+  knc_memset,
+  1,					/* scalar_stmt_cost.  */
+  1,					/* scalar load_cost.  */
+  1,					/* scalar_store_cost.  */
+  1,					/* vec_stmt_cost.  */
+  1,					/* vec_to_scalar_cost.  */
+  1,					/* scalar_to_vec_cost.  */
+  1,					/* vec_align_load_cost.  */
+  2,					/* vec_unalign_load_cost.  */
+  1,					/* vec_store_cost.  */
+  3,					/* cond_taken_branch_cost.  */
+  1,					/* cond_not_taken_branch_cost.  */
+};
+
 /* Generic should produce code tuned for Core-i7 (and newer chips)
    and btver1 (and newer chips).  */
 
@@ -4308,6 +4386,7 @@ ix86_option_override_internal (bool main_args_p,
 #define PTA_CLZERO		(HOST_WIDE_INT_1 << 57)
 #define PTA_NO_80387		(HOST_WIDE_INT_1 << 58)
 #define PTA_PKU		(HOST_WIDE_INT_1 << 59)
+#define PTA_KNC			(HOST_WIDE_INT_1 << 60)
 
 #define PTA_CORE2 \
   (PTA_64BIT | PTA_MMX | PTA_SSE | PTA_SSE2 | PTA_SSE3 | PTA_SSSE3 \
@@ -4490,6 +4569,9 @@ ix86_option_override_internal (bool main_args_p,
 	| PTA_BMI | PTA_F16C | PTA_MOVBE | PTA_PRFCHW
 	| PTA_FXSR | PTA_XSAVE | PTA_XSAVEOPT},
 
+      {"knc", PROCESSOR_PENTIUM, CPU_GENERIC,
+       PTA_64BIT | PTA_NO_SAHF | PTA_KNC},
+
       {"generic", PROCESSOR_GENERIC, CPU_GENERIC,
 	PTA_64BIT
 	| PTA_HLE /* flags are only used for -march switch.  */ },
@@ -4512,6 +4594,8 @@ ix86_option_override_internal (bool main_args_p,
     };
 
   int const pta_size = ARRAY_SIZE (processor_alias_table);
+
+  long long  mic_isa_bit;
 
   /* Set up prefix/suffix so the error messages refer to either the command
      line argument, or the attribute(target).  */
@@ -4940,6 +5024,10 @@ ix86_option_override_internal (bool main_args_p,
 	    else
 	      opts->x_target_flags |= MASK_80387;
 	  }
+	if (processor_alias_table[i].flags & PTA_KNC
+	    && !(ix86_isa_flags_explicit & OPTION_MASK_ISA_KNC))
+	  ix86_isa_flags |= OPTION_MASK_ISA_KNC;
+
 	break;
       }
 
@@ -5306,6 +5394,45 @@ ix86_option_override_internal (bool main_args_p,
 		 prefix, suffix);
       opts->x_target_flags |= MASK_ACCUMULATE_OUTGOING_ARGS;
     }
+
+   if (TARGET_KNC)
+    {
+      /* Always use KNC instruction costs.  */
+      ix86_cost = &knc_cost;
+      mic_isa_bit = OPTION_MASK_ISA_KNC;
+    }
+  else
+    mic_isa_bit = 0;
+
+  if (mic_isa_bit)
+    {
+      /* Disable CMOVE.  */
+      TARGET_CMOV = 0;
+
+      /* Don't allow move from and to vector unit.  */
+      TARGET_INTER_UNIT_MOVES_FROM_VEC = 0;
+      TARGET_INTER_UNIT_MOVES_TO_VEC = 0;
+
+      if (TARGET_64BIT)
+	{
+	  /* Enable extended REX SSE registers.  */
+	  /* TARGET_EXT_REX_SSE_REGS = 1; */
+
+	  /* Enable mask registers.  */
+	  /* TARGET_MASK_REGS = 1; */
+	}
+      else
+	{
+	  /* Turn off KNC ISA in 32bit.  */
+	  ix86_isa_flags &= ~mic_isa_bit;
+	}
+    }
+
+  /* For sane SSE instruction set generation we need fcomi instruction.
+     It is safe to enable all CMOVE instructions.  Also, RDRAND intrinsic
+     expands to a sequence that includes conditional move. */
+  if (TARGET_SSE || TARGET_RDRND)
+    TARGET_CMOV = 1;
 
   /* Figure out what ASM_GENERATE_INTERNAL_LABEL builds as a prefix.  */
   {
@@ -5946,6 +6073,7 @@ ix86_valid_target_attribute_inner_p (tree args, char *p_strings[],
     IX86_ATTR_ISA ("mwaitx",	OPT_mmwaitx),
     IX86_ATTR_ISA ("clzero",    OPT_mclzero),
     IX86_ATTR_ISA ("pku",	OPT_mpku),
+    IX86_ATTR_ISA ("knc",       OPT_mknc),
 
     /* enum options */
     IX86_ATTR_ENUM ("fpmath=",	OPT_mfpmath_),
@@ -21850,7 +21978,7 @@ ix86_prepare_fp_compare_args (enum rtx_code code, rtx *pop0, rtx *pop1)
   machine_mode fpcmp_mode = ix86_fp_compare_mode (code);
   rtx op0 = *pop0, op1 = *pop1;
   machine_mode op_mode = GET_MODE (op0);
-  int is_sse = TARGET_SSE_MATH && SSE_FLOAT_MODE_P (op_mode);
+  int is_sse = (!TARGET_KNC) && (TARGET_SSE_MATH && SSE_FLOAT_MODE_P (op_mode));
 
   /* All of the unordered compare instructions only work on registers.
      The same is true of the fcomi compare instructions.  The XFmode
@@ -23368,6 +23496,9 @@ ix86_expand_fp_movcc (rtx operands[])
   rtx tmp, compare_op;
   rtx op0 = XEXP (operands[1], 0);
   rtx op1 = XEXP (operands[1], 1);
+
+  if (TARGET_KNC)
+    return false;
 
   if (TARGET_SSE_MATH && SSE_FLOAT_MODE_P (mode))
     {
@@ -36375,10 +36506,12 @@ ix86_init_mmx_sse_builtins (void)
       def_builtin_const (d->mask, d->name, ftype, d->code);
     }
 
-  /* SSE */
-  def_builtin (OPTION_MASK_ISA_SSE, "__builtin_ia32_ldmxcsr",
+  /* SSE or KNC */
+  def_builtin ((OPTION_MASK_ISA_SSE
+		| OPTION_MASK_ISA_KNC), "__builtin_ia32_ldmxcsr",
 	       VOID_FTYPE_UNSIGNED, IX86_BUILTIN_LDMXCSR);
-  def_builtin (OPTION_MASK_ISA_SSE, "__builtin_ia32_stmxcsr",
+  def_builtin ((OPTION_MASK_ISA_SSE
+		| OPTION_MASK_ISA_KNC), "__builtin_ia32_stmxcsr",
 	       UNSIGNED_FTYPE_VOID, IX86_BUILTIN_STMXCSR);
 
   /* SSE or 3DNow!A */
