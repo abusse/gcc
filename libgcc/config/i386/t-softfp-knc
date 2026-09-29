@@ -1,0 +1,7 @@
+# i386/t-softfp without the _Float16 routines: those are built with
+# -msse2, and KNC has no SSE2 and hence no _Float16 arithmetic.  The
+# compiler still provides the _Float16 and __bf16 types (for the
+# intrinsic headers), so keep libgcc's own HF/BF support off.
+LIB2ADD += $(srcdir)/config/i386/sfp-exceptions.c
+LIB2FUNCS_EXCLUDE += _divhc3 _mulhc3
+HOST_LIBGCC2_CFLAGS += -U__LIBGCC_HAS_HF_MODE__ -U__LIBGCC_HAS_BF_MODE__

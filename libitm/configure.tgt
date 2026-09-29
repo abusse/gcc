@@ -37,7 +37,7 @@ if test "$gcc_cv_have_tls" = yes ; then
     # For x86, we use slots in the TCB head for most of our TLS.
     # The setup of those slots in beginTransaction can afford to
     # use the global-dynamic model.
-    i[456]86-*-linux* | x86_64-*-linux*)
+    i[456]86-*-linux* | x86_64-*-linux* | k1om-*-linux*)
 	;;
     
     *-*-linux*)
@@ -59,7 +59,7 @@ case "${target_cpu}" in
 
   arm*)		ARCH=arm ;;
 
-  i[3456]86 | x86_64)
+  i[3456]86 | x86_64 | k1om)
 	cat > conftestx.c <<EOF
 #ifndef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 #error need -march=i486
