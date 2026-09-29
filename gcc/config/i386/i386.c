@@ -7011,7 +7011,7 @@ ix86_function_arg_regno_p (int regno)
 		    && (regno < FIRST_SSE_REG + SSE_REGPARM_MAX)));
     }
 
-  if (TARGET_SSE && SSE_REGNO_P (regno)
+  if ((TARGET_SSE || TARGET_KNC) && SSE_REGNO_P (regno)
       && (regno < FIRST_SSE_REG + SSE_REGPARM_MAX))
     return true;
 
@@ -7312,7 +7312,7 @@ init_cumulative_args (CUMULATIVE_ARGS *cum,  /* Argument info to initialize */
                    ? X86_64_REGPARM_MAX
                    : X86_64_MS_REGPARM_MAX);
     }
-  if (TARGET_SSE)
+  if (TARGET_SSE || TARGET_KNC)
     {
       cum->sse_nregs = SSE_REGPARM_MAX;
       if (TARGET_64BIT)
@@ -8107,7 +8107,7 @@ construct_container (machine_mode mode, machine_mode orig_mode,
 
   /* We allowed the user to turn off SSE for kernel mode.  Don't crash if
      some less clueful developer tries to use floating-point anyway.  */
-  if (needed_sseregs && !TARGET_SSE)
+  if (needed_sseregs && !(TARGET_SSE || TARGET_KNC))
     {
       if (in_return)
 	{
@@ -8916,7 +8916,8 @@ static bool
 ix86_compat_aligned_value_p (const_tree type)
 {
   machine_mode mode = TYPE_MODE (type);
-  if (((TARGET_SSE && SSE_REG_MODE_P (mode))
+  if ((((TARGET_SSE || TARGET_KNC)
+	&& SSE_REG_MODE_P (mode))
        || mode == TDmode
        || mode == TFmode
        || mode == TCmode)
@@ -9131,7 +9132,7 @@ ix86_function_value_regno_p (const unsigned int regno)
       /* Complex values are returned in %xmm0/%xmm1 pair.  */
     case XMM0_REG:
     case XMM1_REG:
-      return TARGET_SSE;
+      return TARGET_SSE || TARGET_KNC;
 
     case MM0_REG:
       if (TARGET_MACHO || TARGET_64BIT)
@@ -9585,7 +9586,7 @@ setup_incoming_varargs_64 (CUMULATIVE_ARGS *cum)
 
   /* FPR size of varargs save area.  We don't need it if we don't pass
      anything in SSE registers.  */
-  if (TARGET_SSE && cfun->va_list_fpr_size)
+  if ((TARGET_SSE || TARGET_KNC) && cfun->va_list_fpr_size)
     ix86_varargs_fpr_size = X86_64_SSE_REGPARM_MAX * 16;
   else
     ix86_varargs_fpr_size = 0;
@@ -9852,7 +9853,7 @@ ix86_va_start (tree valist, rtx nextarg)
       expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
     }
 
-  if (TARGET_SSE && cfun->va_list_fpr_size)
+  if ((TARGET_SSE || TARGET_KNC) && cfun->va_list_fpr_size)
     {
       type = TREE_TYPE (fpr);
       t = build2 (MODIFY_EXPR, type, fpr,
