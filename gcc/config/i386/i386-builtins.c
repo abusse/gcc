@@ -605,10 +605,12 @@ ix86_init_mmx_sse_builtins (void)
 		 IX86_BUILTIN__BDESC_COMI_FIRST,
 		 ARRAY_SIZE (bdesc_comi) - 1);
 
-  /* SSE */
-  def_builtin (OPTION_MASK_ISA_SSE, 0,  "__builtin_ia32_ldmxcsr",
+  /* SSE or KNC */
+  def_builtin (TARGET_KNC ? 0 : OPTION_MASK_ISA_SSE, 0,
+	       "__builtin_ia32_ldmxcsr",
 	       VOID_FTYPE_UNSIGNED, IX86_BUILTIN_LDMXCSR);
-  def_builtin_pure (OPTION_MASK_ISA_SSE, 0, "__builtin_ia32_stmxcsr",
+  def_builtin_pure (TARGET_KNC ? 0 : OPTION_MASK_ISA_SSE, 0,
+		    "__builtin_ia32_stmxcsr",
 		    UNSIGNED_FTYPE_VOID, IX86_BUILTIN_STMXCSR);
 
   /* SSE or 3DNow!A */
