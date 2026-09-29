@@ -503,7 +503,7 @@ AC_DEFUN([gcc_GAS_FLAGS],
     dnl Override the default, which may be incompatible.
     gcc_cv_as_flags=--x32
     ;;
-  x86_64-*-linux*)
+  x86_64-*-linux* | k1om-*-linux*)
     dnl Override the default, which may be incompatible.
     gcc_cv_as_flags=--64
     ;;
