@@ -3414,14 +3414,19 @@ if test $in_tree_ld = yes ; then
     gcc_cv_ld_ro_rw_mix=read-write
   fi
 elif test x"$gcc_cv_as" != x -a x"$gcc_cv_ld" != x -a x"$gcc_cv_objdump" != x ; then
+  # A bare k1om gas emits x86-64 objects, which the k1om ld rejects.
+  case "$target" in
+    k1om-*) ro_rw_as_opt=--march=k1om ;;
+    *) ro_rw_as_opt= ;;
+  esac
   echo '.section myfoosect, "a"' > conftest1.s
   echo '.section myfoosect, "aw"' > conftest2.s
   echo '.byte 1' >> conftest2.s
   echo '.section myfoosect, "a"' > conftest3.s
   echo '.byte 0' >> conftest3.s
-  if $gcc_cv_as -o conftest1.o conftest1.s > /dev/null 2>&1 \
-     && $gcc_cv_as -o conftest2.o conftest2.s > /dev/null 2>&1 \
-     && $gcc_cv_as -o conftest3.o conftest3.s > /dev/null 2>&1; then
+  if $gcc_cv_as $ro_rw_as_opt -o conftest1.o conftest1.s > /dev/null 2>&1 \
+     && $gcc_cv_as $ro_rw_as_opt -o conftest2.o conftest2.s > /dev/null 2>&1 \
+     && $gcc_cv_as $ro_rw_as_opt -o conftest3.o conftest3.s > /dev/null 2>&1; then
     # Note the Wild linker has --gc-sections on by default.
     if $gcc_cv_ld -shared -o conftest1.so conftest1.o \
           conftest2.o conftest3.o --no-gc-sections > /dev/null 2>&1 \
@@ -3992,7 +3997,7 @@ foo:	.long	25
 .word foo(tlsldm)
 .word foo(tlsldo)'
 	;;
-  i?86-*-* | x86_64-*-*)
+  i?86-*-* | x86_64-*-* | k1om-*-*)
     case "$target:$gas" in
       i?86-*-solaris2*:no | x86_64-*-solaris2*:no)
 	tls_section_flag=t
@@ -4025,7 +4030,7 @@ foo:	.long	25
 	subl	\$foo@tpoff, %eax
 	leal	foo@ntpoff(%ecx), %eax"
 	;;
-      x86_64-*-*)
+      x86_64-*-* | k1om-*-*)
 	tls_as_opt="$as_64_opt"
 	conftest_s="$conftest_s
 foo:	.long	25
@@ -4807,7 +4812,7 @@ EOF
     ;;
 
 changequote(,)dnl
-  i[34567]86-*-* | x86_64-*-*)
+  i[34567]86-*-* | x86_64-*-* | k1om-*-*)
 changequote([,])dnl
     case $target_os in
       cygwin*)
@@ -6142,7 +6147,7 @@ if test $gcc_cv_ld_pie = yes ; then
   elif test x"$gcc_cv_as" != x -a x"$gcc_cv_ld" != x ; then
     # Check if linker supports -pie option with copy reloc
     case "$target" in
-    i?86-*-linux* | x86_64-*-linux*)
+    i?86-*-linux* | x86_64-*-linux* | k1om-*-linux*)
       cat > conftest1.s <<EOF
 	.globl	a_glob
 	.data

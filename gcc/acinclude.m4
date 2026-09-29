@@ -505,7 +505,7 @@ AC_DEFUN([gcc_GAS_FLAGS],
     as_32_opt=-m32
     as_64_opt=-m64
     ;;
-  i?86-*-*:* | x86_64-*-*:* | sparc*-*-*:*)
+  i?86-*-*:* | x86_64-*-*:* | k1om-*-*:* | sparc*-*-*:*)
     dnl Otherwise x86 and SPARC use GNU assembler options --32/--64/--x32.
     case "$target" in
       i?86-*-* | sparc-*-*)
@@ -517,7 +517,7 @@ AC_DEFUN([gcc_GAS_FLAGS],
       x86_64-*-linux-gnuabi32 | x86_64-*-mingw32abi32)
 	gcc_cv_as_flags=--32
 	;;
-      x86_64-*-* | sparcv9-*-* | sparc64-*-*)
+      x86_64-*-* | k1om-*-* | sparcv9-*-* | sparc64-*-*)
 	gcc_cv_as_flags=--64
 	;;
     esac
