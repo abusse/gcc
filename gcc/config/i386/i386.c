@@ -500,7 +500,7 @@ ix86_conditional_register_usage (void)
     accessible_reg_set &= ~reg_class_contents[MMX_REGS];
 
   /* If SSE is disabled, disable the registers.  */
-  if (! TARGET_SSE)
+  if (! (TARGET_SSE || TARGET_KNC))
     accessible_reg_set &= ~reg_class_contents[ALL_SSE_REGS];
 
   /* If the FPU is disabled, disable the registers.  */
@@ -508,7 +508,7 @@ ix86_conditional_register_usage (void)
     accessible_reg_set &= ~reg_class_contents[FLOAT_REGS];
 
   /* If AVX512F is disabled, disable the registers.  */
-  if (! TARGET_AVX512F)
+  if (! (TARGET_AVX512F || TARGET_KNC))
     {
       for (i = FIRST_EXT_REX_SSE_REG; i <= LAST_EXT_REX_SSE_REG; i++)
 	CLEAR_HARD_REG_BIT (accessible_reg_set, i);
@@ -5022,13 +5022,16 @@ standard_sse_constant_p (rtx x, machine_mode pred_mode)
 {
   machine_mode mode;
 
-  if (!TARGET_SSE)
+  if (!TARGET_SSE && !TARGET_KNC)
     return 0;
 
   mode = GET_MODE (x);
 
   if (x == const0_rtx || const0_operand (x, mode))
     return 1;
+
+  if (!TARGET_SSE)
+    return 0;
 
   if (x == constm1_rtx || vector_all_ones_operand (x, mode))
     {
@@ -5070,12 +5073,15 @@ standard_sse_constant_opcode (rtx_insn *insn, rtx *operands)
   machine_mode mode;
   rtx x = operands[1];
 
-  gcc_assert (TARGET_SSE);
+  gcc_assert (TARGET_SSE || TARGET_KNC);
 
   mode = GET_MODE (x);
 
   if (x == const0_rtx || const0_operand (x, mode))
     {
+      if (TARGET_KNC)
+	return "vpxorq\t%g0, %g0, %g0";
+
       switch (get_attr_mode (insn))
 	{
 	case MODE_TI:
@@ -6147,7 +6153,8 @@ ix86_hard_regno_scratch_ok (unsigned int regno)
 /* Return TRUE if we need to save REGNO.  */
 
 bool
-ix86_save_reg (unsigned int regno, bool maybe_eh_return, bool ignore_outlined)
+ix86_save_reg_1 (unsigned int regno, bool maybe_eh_return,
+		 bool ignore_outlined, bool maybe_live)
 {
   /* If there are no caller-saved registers, we preserve all registers,
      except for MMX and x87 registers which aren't supported when saving
@@ -6184,7 +6191,8 @@ ix86_save_reg (unsigned int regno, bool maybe_eh_return, bool ignore_outlined)
 	  if (!TARGET_64BIT && flag_pic && crtl->profile)
 	    return true;
 	}
-      else if (df_regs_ever_live_p (REAL_PIC_OFFSET_TABLE_REGNUM)
+      else if (maybe_live
+	       || df_regs_ever_live_p (REAL_PIC_OFFSET_TABLE_REGNUM)
 	       || crtl->profile
 	       || crtl->calls_eh_return
 	       || crtl->uses_const_pool
@@ -6218,9 +6226,17 @@ ix86_save_reg (unsigned int regno, bool maybe_eh_return, bool ignore_outlined)
       && !cfun->machine->no_drap_save_restore)
     return true;
 
-  return (df_regs_ever_live_p (regno)
+  return ((maybe_live || df_regs_ever_live_p (regno))
 	  && !call_used_or_fixed_reg_p (regno)
 	  && (regno != HARD_FRAME_POINTER_REGNUM || !frame_pointer_needed));
+}
+
+/* Return 1 if we need to save REGNO.  */
+
+bool
+ix86_save_reg (unsigned int regno, bool maybe_eh_return, bool ignore_outlined)
+{
+  return ix86_save_reg_1 (regno, maybe_eh_return, ignore_outlined, false);
 }
 
 /* Return number of saved general prupose registers.  */
@@ -12754,6 +12770,7 @@ print_reg (rtx x, int code, FILE *file)
    H -- print a memory address offset by 8; used for sse high-parts
    Y -- print condition for XOP pcom* instruction.
    V -- print naked full integer register name without %.
+   J -- don't print memory operand size.
    + -- print a branch hint as 'cs' or 'ds' prefix
    ; -- print a semicolon (after prefixes due to bug in older gas).
    ~ -- print "i" if TARGET_AVX2, "f" otherwise.
@@ -13303,6 +13320,10 @@ ix86_print_operand (FILE *file, rtx x, int code)
 #endif
 	  return;
 
+	case 'J':
+	  /* Skip memory operand size.  */
+	  break;
+
 	case '~':
 	  putc (TARGET_AVX2 ? 'i' : 'f', file);
 	  return;
@@ -13350,7 +13371,8 @@ ix86_print_operand (FILE *file, rtx x, int code)
       rtx addr = XEXP (x, 0);
 
       /* No `byte ptr' prefix for call instructions ... */
-      if (ASSEMBLER_DIALECT == ASM_INTEL && code != 'X' && code != 'P')
+      if (ASSEMBLER_DIALECT == ASM_INTEL && code != 'X' && code != 'P'
+	  && code != 'J')
 	{
 	  machine_mode mode = GET_MODE (x);
 	  const char *size;
@@ -18830,7 +18852,7 @@ ix86_preferred_output_reload_class (rtx x, reg_class_t regclass)
   if (SSE_FLOAT_MODE_P (mode) && TARGET_SSE_MATH)
     return MAYBE_SSE_CLASS_P (regclass) ? ALL_SSE_REGS : NO_REGS;
 
-  if (IS_STACK_MODE (mode))
+  if ((!TARGET_KNC) && IS_STACK_MODE (mode))
     return FLOAT_CLASS_P (regclass) ? regclass : NO_REGS;
 
   return regclass;
@@ -18840,13 +18862,71 @@ static reg_class_t
 ix86_secondary_reload (bool in_p, rtx x, reg_class_t rclass,
 		       machine_mode mode, secondary_reload_info *sri)
 {
+  if (TARGET_KNC
+      && in_p
+      && REG_P (x)
+      && SSE_CLASS_P (rclass)
+      && mode == TImode)
+    {
+      sri->icode = CODE_FOR_knc_reload_inti;
+      return NO_REGS;
+    }
+
+  if (TARGET_KNC
+      && !in_p
+      && MEM_P (x)
+      && SSE_CLASS_P (rclass)
+      && (mode == SImode
+	  || mode == DImode
+	  || mode == TImode
+	  || mode == SFmode
+	  || mode == DFmode
+	  || mode == TFmode))
+    {
+      /* Prohibit for secondary reloads.  */
+      if (misaligned_operand (x, mode)
+	  && (mode != SFmode)
+	  && (mode != DFmode)
+	  && (mode != TFmode)
+	  && (mode != DImode))
+	return NO_REGS;
+
+      switch (mode)
+	{
+	case E_SImode:
+	  sri->icode = CODE_FOR_knc_reload_outsi;
+	  break;
+	case E_DImode:
+	  sri->icode = CODE_FOR_knc_reload_outdi;
+	  break;
+	case E_TImode:
+	  sri->icode = CODE_FOR_knc_reload_outti;
+	  break;
+	case E_SFmode:
+	  sri->icode = CODE_FOR_knc_reload_outsf;
+	  break;
+	case E_DFmode:
+	  sri->icode = CODE_FOR_knc_reload_outdf;
+	  break;
+	case E_TFmode:
+	  sri->icode = CODE_FOR_knc_reload_outtf;
+	  break;
+	default:
+	  gcc_unreachable ();
+	  break;
+	}
+
+      return NO_REGS;
+    }
+
   /* Double-word spills from general registers to non-offsettable memory
      references (zero-extended addresses) require special handling.  */
   if (TARGET_64BIT
       && MEM_P (x)
       && GET_MODE_SIZE (mode) > UNITS_PER_WORD
       && INTEGER_CLASS_P (rclass)
-      && !offsettable_memref_p (x))
+      && !offsettable_nonstrict_memref_p (x)
+      && !push_operand (x, mode))
     {
       sri->icode = (in_p
 		    ? CODE_FOR_reload_noff_load
@@ -18978,6 +19058,18 @@ inline_secondary_memory_needed (machine_mode mode, reg_class_t class1,
 {
   if (lra_in_progress && (class1 == NO_REGS || class2 == NO_REGS))
     return false;
+
+  if (TARGET_KNC
+      && strict
+      && ((SSE_CLASS_P (class1)
+	   && !SSE_CLASS_P (class2))
+	  || (SSE_CLASS_P (class2)
+	      && !SSE_CLASS_P (class1)))
+      && mode == TImode)
+    {
+      gcc_assert (lra_in_progress);
+      /*return true;*/
+    }
 
   if (MAYBE_FLOAT_CLASS_P (class1) != FLOAT_CLASS_P (class1)
       || MAYBE_FLOAT_CLASS_P (class2) != FLOAT_CLASS_P (class2)
