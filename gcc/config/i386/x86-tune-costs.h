@@ -371,6 +371,95 @@ struct processor_costs pentium_cost = {
   COSTS_N_INSNS (1),			/* cond_not_taken_branch_cost.  */
 };
 
+/* KNC: Pentium costs, but stores from and moves out of the vector unit
+   are priced out, and the stringop algorithms cover 64-bit.  */
+static stringop_algs knc_memcpy[2] = {
+  {libcall, {{256, rep_prefix_4_byte, false}, {-1, libcall, false}}},
+  {libcall, {{32, loop, false}, {8192, rep_prefix_8_byte, false},
+	     {-1, libcall, false}}}};
+static stringop_algs knc_memset[2] = {
+  {libcall, {{-1, rep_prefix_4_byte, false}}},
+  {libcall, {{32, loop, false}, {8192, rep_prefix_8_byte, false},
+	     {-1, libcall, false}}}};
+
+static const
+struct processor_costs knc_cost = {
+  COSTS_N_INSNS (1),			/* cost of an add instruction */
+  COSTS_N_INSNS (1),			/* cost of a lea instruction */
+  COSTS_N_INSNS (4),			/* variable shift costs */
+  COSTS_N_INSNS (1),			/* constant shift costs */
+  {COSTS_N_INSNS (11),			/* cost of starting multiply for QI */
+   COSTS_N_INSNS (11),			/*				 HI */
+   COSTS_N_INSNS (11),			/*				 SI */
+   COSTS_N_INSNS (11),			/*				 DI */
+   COSTS_N_INSNS (11)},			/*			      other */
+  0,					/* cost of multiply per each bit set */
+  {COSTS_N_INSNS (25),			/* cost of a divide/mod for QI */
+   COSTS_N_INSNS (25),			/*			    HI */
+   COSTS_N_INSNS (25),			/*			    SI */
+   COSTS_N_INSNS (25),			/*			    DI */
+   COSTS_N_INSNS (25)},			/*			    other */
+  COSTS_N_INSNS (3),			/* cost of movsx */
+  COSTS_N_INSNS (2),			/* cost of movzx */
+  8,					/* "large" insn */
+  6,					/* MOVE_RATIO */
+
+  /* All move costs are relative to integer->integer move times 2 and thus
+     they are latency*2. */
+  6,				     /* cost for loading QImode using movzbl */
+  {2, 4, 2},				/* cost of loading integer registers
+					   in QImode, HImode and SImode.
+					   Relative to reg-reg move (2).  */
+  {2, 4, 2},				/* cost of storing integer registers */
+  2,					/* cost of reg,reg fld/fst */
+  {2, 2, 6},				/* cost of loading fp registers
+					   in SFmode, DFmode and XFmode */
+  {4, 4, 6},				/* cost of storing fp registers
+					   in SFmode, DFmode and XFmode */
+  8,					/* cost of moving MMX register */
+  {8, 8},				/* cost of loading MMX registers
+					   in SImode and DImode */
+  {8, 8},				/* cost of storing MMX registers
+					   in SImode and DImode */
+  2, 4, 8,				/* cost of moving XMM,YMM,ZMM register */
+  {4, 8, 16, 32, 64},			/* cost of loading SSE registers
+					   in 32,64,128,256 and 512-bit */
+  {4, 8, 16, 32, 64},			/* cost of unaligned loads.  */
+  {4096, 4096, 4096, 4096, 4096},	/* cost of storing SSE registers
+					   in 32,64,128,256 and 512-bit */
+  {4096, 4096, 4096, 4096, 4096},	/* cost of unaligned stores.  */
+  4096, 4096,				/* SSE->integer and integer->SSE moves */
+  4, 4,					/* Gather load static, per_elt.  */
+  4, 4,					/* Gather store static, per_elt.  */
+  8,					/* size of l1 cache.  */
+  8,					/* size of l2 cache  */
+  0,					/* size of prefetch block */
+  0,					/* number of parallel prefetches */
+  2,					/* Branch cost */
+  COSTS_N_INSNS (3),			/* cost of FADD and FSUB insns.  */
+  COSTS_N_INSNS (3),			/* cost of FMUL instruction.  */
+  COSTS_N_INSNS (39),			/* cost of FDIV instruction.  */
+  COSTS_N_INSNS (1),			/* cost of FABS instruction.  */
+  COSTS_N_INSNS (1),			/* cost of FCHS instruction.  */
+  COSTS_N_INSNS (70),			/* cost of FSQRT instruction.  */
+
+  COSTS_N_INSNS (1),			/* cost of cheap SSE instruction.  */
+  COSTS_N_INSNS (3),			/* cost of ADDSS/SD SUBSS/SD insns.  */
+  COSTS_N_INSNS (3),			/* cost of MULSS instruction.  */
+  COSTS_N_INSNS (3),			/* cost of MULSD instruction.  */
+  COSTS_N_INSNS (6),			/* cost of FMA SS instruction.  */
+  COSTS_N_INSNS (6),			/* cost of FMA SD instruction.  */
+  COSTS_N_INSNS (39),			/* cost of DIVSS instruction.  */
+  COSTS_N_INSNS (39),			/* cost of DIVSD instruction.  */
+  COSTS_N_INSNS (70),			/* cost of SQRTSS instruction.  */
+  COSTS_N_INSNS (70),			/* cost of SQRTSD instruction.  */
+  1, 1, 1, 1,				/* reassoc int, fp, vec_int, vec_fp.  */
+  knc_memcpy,
+  knc_memset,
+  COSTS_N_INSNS (3),			/* cond_taken_branch_cost.  */
+  COSTS_N_INSNS (1),			/* cond_not_taken_branch_cost.  */
+};
+
 static const
 struct processor_costs lakemont_cost = {
   COSTS_N_INSNS (1),			/* cost of an add instruction */
