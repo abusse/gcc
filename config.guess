@@ -1107,6 +1107,9 @@ EOF
     vax:Linux:*:*)
 	echo "$UNAME_MACHINE"-dec-linux-"$LIBC"
 	exit ;;
+    k1om:Linux:*:*)
+	echo ${UNAME_MACHINE}-unknown-linux-${LIBC}
+	exit ;;
     x86_64:Linux:*:*)
 	set_cc_for_build
 	LIBCABI=$LIBC
