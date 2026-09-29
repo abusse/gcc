@@ -120,7 +120,7 @@ moxie*)	cpu_type=moxie
 i[34567]86-*-*)
 	cpu_type=i386
 	;;
-x86_64-*-*)
+x86_64-*-* | k1om-*-*)
 	cpu_type=i386
 	;;
 ia64-*-*)
@@ -662,7 +662,7 @@ i[34567]86-*-gnu*)
 	tm_file="${tm_file} i386/elf-lib.h"
 	md_unwind_header=i386/gnu-unwind.h
 	;;
-x86_64-*-linux*)
+x86_64-*-linux* | k1om-*-linux*)
 	extra_parts="$extra_parts crtprec32.o crtprec64.o crtprec80.o crtfastmath.o"
 	tmake_file="${tmake_file} i386/t-crtpc t-crtfm i386/t-crtstuff t-dfprules"
 	tm_file="${tm_file} i386/elf-lib.h"
@@ -1376,7 +1376,7 @@ nvptx-*)
 esac
 
 case ${host} in
-i[34567]86-*-* | x86_64-*-*)
+i[34567]86-*-* | x86_64-*-* | k1om-*-*)
 	case ${host} in
 	*-musl*)
 		tmake_file="${tmake_file} i386/t-cpuinfo-static"
@@ -1389,7 +1389,7 @@ i[34567]86-*-* | x86_64-*-*)
 esac
 
 case ${host} in
-i[34567]86-*-linux* | x86_64-*-linux* | \
+i[34567]86-*-linux* | x86_64-*-linux* | k1om-*-linux* | \
   i[34567]86-*-kfreebsd*-gnu | x86_64-*-kfreebsd*-gnu | \
   i[34567]86-*-gnu*)
 	tmake_file="${tmake_file} t-tls i386/t-linux i386/t-msabi t-slibgcc-libgcc"
@@ -1403,7 +1403,7 @@ case ${host} in
 i[34567]86-*-elfiamcu | i[34567]86-*-rtems*)
 	# These use soft-fp for SFmode and DFmode, not just TFmode.
 	;;
-i[34567]86-*-* | x86_64-*-*)
+i[34567]86-*-* | x86_64-*-* | k1om-*-*)
   	tmake_file="${tmake_file} t-softfp-tf"
 	if test "${host_address}" = 32; then
 		tmake_file="${tmake_file} i386/${host_address}/t-softfp"
@@ -1413,7 +1413,7 @@ i[34567]86-*-* | x86_64-*-*)
 esac
 
 case ${host} in
-i[34567]86-*-linux* | x86_64-*-linux*)
+i[34567]86-*-linux* | x86_64-*-linux* | k1om-*-linux*)
 	# Provide backward binary compatibility for 64bit Linux/x86.
 	if test "${host_address}" = 64; then
 		tmake_file="${tmake_file} i386/${host_address}/t-softfp-compat"
@@ -1424,4 +1424,15 @@ aarch64*-*-*)
 	# ILP32 needs an extra header for unwinding
 	tm_file="${tm_file} aarch64/value-unwind.h"
 	;;
+esac
+
+
+case ${host} in
+x86_64-k1om-linux* | k1om-*-linux*)
+	extra_parts="$extra_parts crtprec32.o crtprec64.o crtprec80.o crtfastmath.o"
+	tmake_file="${tmake_file} i386/32/t-softfp i386/t-crtpc t-crtfm i386/t-crtstuff t-dfprules t-fpbit"
+	# The ms-abi register save/restore stubs are SSE code.
+	tmake_file=`echo ${tmake_file} | sed -e 's,i386/t-msabi,,'`
+	tm_file="${tm_file} i386/elf-lib.h"
+	md_unwind_header=i386/linux-unwind.h
 esac
