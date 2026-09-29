@@ -39,7 +39,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 /* Redefines for option macros.  */
 
-#define TARGET_CMPXCHG16B	TARGET_CX16
+#define TARGET_CMPXCHG16B	(TARGET_CX16 && !TARGET_KNC)
 #define TARGET_CMPXCHG16B_P(x)	TARGET_CX16_P(x)
 
 #define TARGET_LP64		TARGET_ABI_64
@@ -532,6 +532,7 @@ extern GTY(()) tree x86_mfence;
 /* Enable MMX, SSE and SSE2 by default.  */
 #define TARGET_SUBTARGET64_ISA_DEFAULT \
   (OPTION_MASK_ISA_MMX | OPTION_MASK_ISA_SSE | OPTION_MASK_ISA_SSE2)
+#define TARGET_SUBTARGET_ISA2_DEFAULT 0
 
 /* Replace MACH-O, ifdefs by in-line tests, where possible. 
    (a) Macros defined in config/i386/darwin.h  */

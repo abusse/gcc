@@ -1014,6 +1014,10 @@ mstack-protector-guard=
 Target RejectNegative Joined Enum(stack_protector_guard) Var(ix86_stack_protector_guard) Init(SSP_TLS)
 Use given stack-protector guard.
 
+mknc
+Target Mask(ISA2_KNC) Var(ix86_isa_flags2) Save
+Support KNC vector extension code generation instead of MMX/SSE/AVX
+
 Enum
 Name(stack_protector_guard) Type(enum stack_protector_guard)
 Known stack protector guard (for use with the -mstack-protector-guard= option):

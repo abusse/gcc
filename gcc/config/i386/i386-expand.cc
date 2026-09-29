@@ -2682,7 +2682,7 @@ ix86_prepare_fp_compare_args (enum rtx_code code, rtx *pop0, rtx *pop1)
   bool unordered_compare = ix86_unordered_fp_compare (code);
   rtx op0 = *pop0, op1 = *pop1;
   machine_mode op_mode = GET_MODE (op0);
-  bool is_sse = SSE_FLOAT_MODE_SSEMATH_OR_HF_P (op_mode);
+  bool is_sse = !TARGET_KNC && SSE_FLOAT_MODE_SSEMATH_OR_HF_P (op_mode);
 
   if (op_mode == BFmode)
     {
@@ -4328,6 +4328,9 @@ ix86_expand_fp_movcc (rtx operands[])
   rtx tmp, compare_op;
   rtx op0 = XEXP (operands[1], 0);
   rtx op1 = XEXP (operands[1], 1);
+
+  if (TARGET_KNC)
+    return false;
 
   if (GET_MODE (op0) == BFmode
       && !ix86_fp_comparison_operator (operands[1], VOIDmode))
