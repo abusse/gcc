@@ -3579,6 +3579,8 @@ ix86_option_override_internal (bool main_args_p,
     };
 
 
+  long long  mic_isa_bit;
+
   /* Turn off both OPTION_MASK_ABI_64 and OPTION_MASK_ABI_X32 if
      TARGET_64BIT_DEFAULT is true and TARGET_64BIT is false.  */
   if (TARGET_64BIT_DEFAULT && !TARGET_64BIT_P (opts->x_ix86_isa_flags))
@@ -4091,6 +4093,11 @@ ix86_option_override_internal (bool main_args_p,
 	    else
 	      opts->x_target_flags |= MASK_80387;
 	  }
+	/* The PTA word is full in GCC 7; recognise the knc entry by name.  */
+	if (!strcmp (processor_alias_table[i].name, "knc")
+	    && !(ix86_isa_flags2_explicit & OPTION_MASK_ISA_KNC))
+	  ix86_isa_flags2 |= OPTION_MASK_ISA_KNC;
+
 	break;
       }
 
@@ -4300,6 +4307,9 @@ ix86_option_override_internal (bool main_args_p,
       if (!ix86_arch_specified)
 	opts->x_ix86_isa_flags
 	  |= TARGET_SUBTARGET64_ISA_DEFAULT & ~opts->x_ix86_isa_flags_explicit;
+      if (!ix86_arch_specified)
+	opts->x_ix86_isa_flags2
+	  |= TARGET_SUBTARGET_ISA2_DEFAULT & ~opts->x_ix86_isa_flags2_explicit;
 
       if (TARGET_RTD_P (opts->x_target_flags))
 	warning (0,
@@ -4522,6 +4532,45 @@ ix86_option_override_internal (bool main_args_p,
 		      "%<target(\"accumulate-outgoing-args\")%>"));
       opts->x_target_flags |= MASK_ACCUMULATE_OUTGOING_ARGS;
     }
+
+   if (TARGET_KNC)
+    {
+      /* Always use KNC instruction costs.  */
+      ix86_cost = &knc_cost;
+      mic_isa_bit = OPTION_MASK_ISA_KNC;
+    }
+  else
+    mic_isa_bit = 0;
+
+  if (mic_isa_bit)
+    {
+      /* Disable CMOVE.  */
+      TARGET_CMOV = 0;
+
+      /* Don't allow move from and to vector unit.  */
+      TARGET_INTER_UNIT_MOVES_FROM_VEC = 0;
+      TARGET_INTER_UNIT_MOVES_TO_VEC = 0;
+
+      if (TARGET_64BIT)
+	{
+	  /* Enable extended REX SSE registers.  */
+	  /* TARGET_EXT_REX_SSE_REGS = 1; */
+
+	  /* Enable mask registers.  */
+	  /* TARGET_MASK_REGS = 1; */
+	}
+      else
+	{
+	  /* Turn off KNC ISA in 32bit.  */
+	  ix86_isa_flags2 &= ~mic_isa_bit;
+	}
+    }
+
+  /* For sane SSE instruction set generation we need fcomi instruction.
+     It is safe to enable all CMOVE instructions.  Also, RDRAND intrinsic
+     expands to a sequence that includes conditional move. */
+  if (TARGET_SSE || TARGET_RDRND)
+    TARGET_CMOV = 1;
 
   /* Figure out what ASM_GENERATE_INTERNAL_LABEL builds as a prefix.  */
   {
@@ -5286,6 +5335,7 @@ ix86_valid_target_attribute_inner_p (tree args, char *p_strings[],
     IX86_ATTR_ISA ("waitpkg", OPT_mwaitpkg),
     IX86_ATTR_ISA ("cldemote", OPT_mcldemote),
     IX86_ATTR_ISA ("ptwrite",   OPT_mptwrite),
+    IX86_ATTR_ISA ("knc",       OPT_mknc),
 
     /* enum options */
     IX86_ATTR_ENUM ("fpmath=",	OPT_mfpmath_),
@@ -22508,7 +22558,7 @@ ix86_prepare_fp_compare_args (enum rtx_code code, rtx *pop0, rtx *pop1)
   bool unordered_compare = ix86_unordered_fp_compare (code);
   rtx op0 = *pop0, op1 = *pop1;
   machine_mode op_mode = GET_MODE (op0);
-  bool is_sse = TARGET_SSE_MATH && SSE_FLOAT_MODE_P (op_mode);
+  bool is_sse = !TARGET_KNC && TARGET_SSE_MATH && SSE_FLOAT_MODE_P (op_mode);
 
   /* All of the unordered compare instructions only work on registers.
      The same is true of the fcomi compare instructions.  The XFmode
@@ -24145,6 +24195,9 @@ ix86_expand_fp_movcc (rtx operands[])
   rtx tmp, compare_op;
   rtx op0 = XEXP (operands[1], 0);
   rtx op1 = XEXP (operands[1], 1);
+
+  if (TARGET_KNC)
+    return false;
 
   if (TARGET_SSE_MATH && SSE_FLOAT_MODE_P (mode))
     {
@@ -31170,10 +31223,12 @@ ix86_init_mmx_sse_builtins (void)
 		 IX86_BUILTIN__BDESC_COMI_FIRST,
 		 ARRAY_SIZE (bdesc_comi) - 1);
 
-  /* SSE */
-  def_builtin (OPTION_MASK_ISA_SSE, 0,  "__builtin_ia32_ldmxcsr",
+  /* SSE or KNC */
+  def_builtin (TARGET_KNC ? 0 : OPTION_MASK_ISA_SSE, 0,
+	       "__builtin_ia32_ldmxcsr",
 	       VOID_FTYPE_UNSIGNED, IX86_BUILTIN_LDMXCSR);
-  def_builtin_pure (OPTION_MASK_ISA_SSE, 0, "__builtin_ia32_stmxcsr",
+  def_builtin_pure (TARGET_KNC ? 0 : OPTION_MASK_ISA_SSE, 0,
+		    "__builtin_ia32_stmxcsr",
 		    UNSIGNED_FTYPE_VOID, IX86_BUILTIN_STMXCSR);
 
   /* SSE or 3DNow!A */

@@ -1726,6 +1726,8 @@ const pta processor_alias_table[] =
       | PTA_BMI | PTA_F16C | PTA_MOVBE | PTA_PRFCHW
       | PTA_FXSR | PTA_XSAVE | PTA_XSAVEOPT},
 
+  {"knc", PROCESSOR_PENTIUM, CPU_GENERIC,
+    PTA_64BIT | PTA_NO_SAHF},
   {"generic", PROCESSOR_GENERIC, CPU_GENERIC,
     PTA_64BIT
       | PTA_HLE /* flags are only used for -march switch.  */ },

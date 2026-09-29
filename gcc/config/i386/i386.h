@@ -149,7 +149,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define TARGET_XSAVES_P(x)	TARGET_ISA_XSAVES_P(x)
 #define TARGET_PCLMUL	TARGET_ISA_PCLMUL
 #define TARGET_PCLMUL_P(x)	TARGET_ISA_PCLMUL_P(x)
-#define TARGET_CMPXCHG16B	TARGET_ISA_CX16
+#define TARGET_CMPXCHG16B	(TARGET_ISA_CX16 && !TARGET_ISA_KNC)
 #define TARGET_CMPXCHG16B_P(x)	TARGET_ISA_CX16_P(x)
 #define TARGET_FSGSBASE	TARGET_ISA_FSGSBASE
 #define TARGET_FSGSBASE_P(x)	TARGET_ISA_FSGSBASE_P(x)
@@ -193,6 +193,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define TARGET_CLDEMOTE_P(x) TARGET_ISA_CLDEMOTE_P(x)
 #define TARGET_PTWRITE	TARGET_ISA_PTWRITE
 #define TARGET_PTWRITE_P(x)	TARGET_ISA_PTWRITE_P(x)
+#define TARGET_KNF      TARGET_ISA_KNF
+#define TARGET_KNF_P(x)	TARGET_ISA_KNF_P(x)
+#define TARGET_KNC      TARGET_ISA_KNC
+#define TARGET_KNC_P(x)	TARGET_ISA_KNC_P(x)
 
 #define TARGET_LP64	TARGET_ABI_64
 #define TARGET_LP64_P(x)	TARGET_ABI_64_P(x)
@@ -637,6 +641,7 @@ extern tree x86_mfence;
 /* Enable MMX, SSE and SSE2 by default.  */
 #define TARGET_SUBTARGET64_ISA_DEFAULT \
   (OPTION_MASK_ISA_MMX | OPTION_MASK_ISA_SSE | OPTION_MASK_ISA_SSE2)
+#define TARGET_SUBTARGET_ISA2_DEFAULT 0
 
 /* Replace MACH-O, ifdefs by in-line tests, where possible. 
    (a) Macros defined in config/i386/darwin.h  */
