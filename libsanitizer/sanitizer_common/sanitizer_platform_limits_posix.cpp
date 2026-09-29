@@ -124,7 +124,9 @@ typedef struct user_fpregs elf_fpregset_t;
 #if HAVE_RPC_XDR_H
 # include <rpc/xdr.h>
 #endif
-#include <scsi/scsi.h>
+#if !defined(__KNC__)
+#  include <scsi/scsi.h>
+#endif /* __KNC__  */
 #else
 #include <linux/if_ppp.h>
 #include <linux/kd.h>
@@ -915,10 +917,12 @@ unsigned struct_ElfW_Phdr_sz = sizeof(Elf_Phdr);
   unsigned IOCTL_PIO_UNIMAPCLR = PIO_UNIMAPCLR;
   unsigned IOCTL_PIO_UNISCRNMAP = PIO_UNISCRNMAP;
 #if SANITIZER_GLIBC
+#if !defined(__KNC__)
   unsigned IOCTL_SCSI_IOCTL_GET_IDLUN = SCSI_IOCTL_GET_IDLUN;
   unsigned IOCTL_SCSI_IOCTL_PROBE_HOST = SCSI_IOCTL_PROBE_HOST;
   unsigned IOCTL_SCSI_IOCTL_TAGGED_DISABLE = SCSI_IOCTL_TAGGED_DISABLE;
   unsigned IOCTL_SCSI_IOCTL_TAGGED_ENABLE = SCSI_IOCTL_TAGGED_ENABLE;
+#endif /* __KNC  */
   unsigned IOCTL_SIOCAIPXITFCRT = SIOCAIPXITFCRT;
   unsigned IOCTL_SIOCAIPXPRISLT = SIOCAIPXPRISLT;
   unsigned IOCTL_SIOCAX25ADDUID = SIOCAX25ADDUID;

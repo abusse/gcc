@@ -43,7 +43,7 @@ case "${host_cpu}" in
 
   # x86 asm should be used instead of glibc, since glibc doesn't support
   # the x86 denormal exception.
-  i?86 | x86_64)
+  i?86 | x86_64 | k1om)
     if test "x${have_soft_float}" = "xyes"; then
       fpu_host='fpu-generic'
       ieee_support='no'
