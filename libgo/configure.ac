@@ -261,7 +261,7 @@ case ${host} in
     esac
     ;;
 changequote(,)dnl
-  i[34567]86-*-* | x86_64-*-*)
+  i[34567]86-*-* | x86_64-*-* | k1om-*-*)
 changequote([,])dnl
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #ifdef __x86_64__
