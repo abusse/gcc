@@ -2991,6 +2991,10 @@ ix86_option_override_internal (bool main_args_p,
 	}
     }
 
+  /* The k1om binutils 2.22 and gdb 7.6 predate DWARF 5.  */
+  if (TARGET_KNC && main_args_p && !opts_set->x_dwarf_version)
+    opts->x_dwarf_version = 4;
+
   /* For sane SSE instruction set generation we need fcomi instruction.
      It is safe to enable all CMOVE instructions.  Also, RDRAND intrinsic
      expands to a sequence that includes conditional move. */
