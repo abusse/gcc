@@ -3234,14 +3234,19 @@ if test $in_tree_ld = yes ; then
     gcc_cv_ld_ro_rw_mix=read-write
   fi
 elif test x$gcc_cv_as != x -a x$gcc_cv_ld != x -a x$gcc_cv_objdump != x ; then
+  # A bare k1om gas emits x86-64 objects, which the k1om ld rejects.
+  case "$target" in
+    k1om-*) ro_rw_as_opt=--march=k1om ;;
+    *) ro_rw_as_opt= ;;
+  esac
   echo '.section myfoosect, "a"' > conftest1.s
   echo '.section myfoosect, "aw"' > conftest2.s
   echo '.byte 1' >> conftest2.s
   echo '.section myfoosect, "a"' > conftest3.s
   echo '.byte 0' >> conftest3.s
-  if $gcc_cv_as -o conftest1.o conftest1.s > /dev/null 2>&1 \
-     && $gcc_cv_as -o conftest2.o conftest2.s > /dev/null 2>&1 \
-     && $gcc_cv_as -o conftest3.o conftest3.s > /dev/null 2>&1 \
+  if $gcc_cv_as $ro_rw_as_opt -o conftest1.o conftest1.s > /dev/null 2>&1 \
+     && $gcc_cv_as $ro_rw_as_opt -o conftest2.o conftest2.s > /dev/null 2>&1 \
+     && $gcc_cv_as $ro_rw_as_opt -o conftest3.o conftest3.s > /dev/null 2>&1 \
      && $gcc_cv_ld -shared -o conftest1.so conftest1.o \
 	conftest2.o conftest3.o > /dev/null 2>&1; then
     gcc_cv_ld_ro_rw_mix=`$gcc_cv_objdump -h conftest1.so \
@@ -3837,7 +3842,7 @@ foo:	.long	25
 .word foo(tlsldm)
 .word foo(tlsldo)'
 	;;
-  i[34567]86-*-* | x86_64-*-*)
+  i[34567]86-*-* | x86_64-*-* | k1om-*-*)
     case "$target" in
       i[34567]86-*-solaris2.* | x86_64-*-solaris2.*)
 	on_solaris=yes
@@ -3882,7 +3887,7 @@ foo:	.long	25
 	subl	\$foo@tpoff, %eax
 	leal	foo@ntpoff(%ecx), %eax"
 	;;
-      x86_64-*-*)
+      x86_64-*-* | k1om-*-*)
 	if test x$on_solaris = xyes; then
 	  case $gas_flag in
 	    yes) tls_as_opt="$tls_as_opt --64" ;;
@@ -4741,7 +4746,7 @@ foo:
     ;;
 
 changequote(,)dnl
-  i[34567]86-*-* | x86_64-*-*)
+  i[34567]86-*-* | x86_64-*-* | k1om-*-*)
 changequote([,])dnl
     case $target_os in
       cygwin*)
@@ -6084,7 +6089,7 @@ if test $gcc_cv_ld_pie = yes ; then
   elif test x$gcc_cv_as != x -a x$gcc_cv_ld != x ; then
     # Check if linker supports -pie option with copy reloc
     case "$target" in
-    i?86-*-linux* | x86_64-*-linux*)
+    i?86-*-linux* | x86_64-*-linux* | k1om-*-linux*)
       cat > conftest1.s <<EOF
 	.globl	a_glob
 	.data
@@ -6494,7 +6499,7 @@ fi
 case "$target" in
   *-*-solaris2.1[[1-9]]*)
     case "$target" in
-    i?86-*-* | x86_64-*-*)
+    i?86-*-* | x86_64-*-* | k1om-*-*)
       if echo "$ld_ver" | grep GNU > /dev/null; then
         # Doesn't work with gld on Solaris/x86 due to PR ld/12320.
         gcc_cv_ld_as_needed=no
