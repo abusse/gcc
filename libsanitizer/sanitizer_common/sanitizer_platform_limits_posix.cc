@@ -131,7 +131,9 @@
 #elif HAVE_TIRPC_RPC_XDR_H
 # include <tirpc/rpc/xdr.h>
 #endif
-#include <scsi/scsi.h>
+#if !defined(__KNC__)
+#  include <scsi/scsi.h>
+#endif /* __KNC__  */
 #include <sys/mtio.h>
 #include <sys/kd.h>
 #include <sys/shm.h>
@@ -809,10 +811,12 @@ namespace __sanitizer {
   unsigned IOCTL_PIO_UNIMAP = PIO_UNIMAP;
   unsigned IOCTL_PIO_UNIMAPCLR = PIO_UNIMAPCLR;
   unsigned IOCTL_PIO_UNISCRNMAP = PIO_UNISCRNMAP;
+#if !defined(__KNC__)
   unsigned IOCTL_SCSI_IOCTL_GET_IDLUN = SCSI_IOCTL_GET_IDLUN;
   unsigned IOCTL_SCSI_IOCTL_PROBE_HOST = SCSI_IOCTL_PROBE_HOST;
   unsigned IOCTL_SCSI_IOCTL_TAGGED_DISABLE = SCSI_IOCTL_TAGGED_DISABLE;
   unsigned IOCTL_SCSI_IOCTL_TAGGED_ENABLE = SCSI_IOCTL_TAGGED_ENABLE;
+#endif /* __KNC  */
   unsigned IOCTL_SIOCAIPXITFCRT = SIOCAIPXITFCRT;
   unsigned IOCTL_SIOCAIPXPRISLT = SIOCAIPXPRISLT;
   unsigned IOCTL_SIOCAX25ADDUID = SIOCAX25ADDUID;
