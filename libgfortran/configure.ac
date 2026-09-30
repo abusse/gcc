@@ -615,6 +615,11 @@ LIBGFOR_CHECK_UNLINK_OPEN_FILE
 # Check whether line terminator is LF or CRLF
 LIBGFOR_CHECK_CRLF
 
+# KNC has none of these, but the k1om assembler takes some of the
+# AVX-512 forms the probes use.
+case "$target" in
+  k1om-*) ;;
+  *)
 # Check whether we support AVX extensions
 LIBGFOR_CHECK_AVX
 
@@ -623,6 +628,8 @@ LIBGFOR_CHECK_AVX2
 
 # Check wether we support AVX512f extensions
 LIBGFOR_CHECK_AVX512F
+    ;;
+esac
 
 # Determine what GCC version number to use in filesystem paths.
 GCC_BASE_VER
