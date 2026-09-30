@@ -196,7 +196,7 @@ if test $enable_canonical_system_headers != no; then
 fi
 
 case $target in
-  i?86-* | x86_64-*)
+  i?86-* | x86_64-* | k1om-*)
     AC_TRY_COMPILE([], [asm ("pshufb %xmm0, %xmm1")],
       [AC_DEFINE([HAVE_SSSE3], [1],
 		 [Define to 1 if you can assemble SSSE3 insns.])])

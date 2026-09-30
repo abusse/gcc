@@ -296,6 +296,7 @@ __attribute__((__target__("sse2")))
 #endif
 search_line_sse2 (const uchar *s, const uchar *end ATTRIBUTE_UNUSED)
 {
+#ifdef __SSE2__
   typedef char v16qi __attribute__ ((__vector_size__ (16)));
 
   const v16qi repl_nl = *(const v16qi *)repl_chars[0];
@@ -339,6 +340,8 @@ search_line_sse2 (const uchar *s, const uchar *end ATTRIBUTE_UNUSED)
      character.  Conversion to the byte index is trivial.  */
   found = __builtin_ctz(found);
   return (const uchar *)p + found;
+#endif
+  return 0;
 }
 
 #ifdef HAVE_SSSE3
