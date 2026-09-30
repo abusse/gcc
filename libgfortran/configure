@@ -32351,6 +32351,11 @@ $as_echo "#define HAVE_CRLF 1" >>confdefs.h
 
 fi
 
+# KNC has none of these, but the k1om assembler takes some of the
+# AVX-512 forms the probes use.
+case "$target" in
+  k1om-*) ;;
+  *)
 # Check whether we support AVX extensions
 
   ac_save_CFLAGS="$CFLAGS"
@@ -32508,6 +32513,8 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
   CFLAGS="$ac_save_CFLAGS"
 
+    ;;
+esac
 
 # Check if AVX128 works
 
