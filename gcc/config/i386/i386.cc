@@ -26882,6 +26882,18 @@ static const scoped_attribute_specs *const ix86_attribute_table[] =
   &ix86_gnu_attribute_table
 };
 
+/* Implement TARGET_EXPAND_TO_RTL_HOOK.  KNC cannot run AVX-512 code, and
+   register allocation does not terminate on it for KNC, so reject a
+   function compiled for both before it gets there.  */
+
+static void
+ix86_expand_to_rtl_hook (void)
+{
+  if (TARGET_KNC && TARGET_AVX512F)
+    error_at (DECL_SOURCE_LOCATION (current_function_decl),
+	      "AVX-512 is not supported for KNC");
+}
+
 /* Initialize the GCC target structure.  */
 #undef TARGET_RETURN_IN_MEMORY
 #define TARGET_RETURN_IN_MEMORY ix86_return_in_memory
@@ -27271,6 +27283,8 @@ ix86_libgcc_floating_mode_supported_p
 
 #undef TARGET_SET_CURRENT_FUNCTION
 #define TARGET_SET_CURRENT_FUNCTION ix86_set_current_function
+#undef TARGET_EXPAND_TO_RTL_HOOK
+#define TARGET_EXPAND_TO_RTL_HOOK ix86_expand_to_rtl_hook
 
 #undef TARGET_OPTION_VALID_ATTRIBUTE_P
 #define TARGET_OPTION_VALID_ATTRIBUTE_P ix86_valid_target_attribute_p
