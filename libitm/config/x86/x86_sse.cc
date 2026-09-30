@@ -25,6 +25,10 @@
 #include "libitm_i.h"
 #include "dispatch.h"
 
+// KNC has no SSE or MMX: nothing uses these barriers there, and the
+// k1om assembler rejects the SSE moves -msse makes of them.
+#ifndef __KNC__
+
 // ??? Use memcpy for now, until we have figured out how to best instantiate
 // these loads/stores.
 CREATE_DISPATCH_FUNCTIONS_T_MEMCPY(M64, GTM::abi_disp()->, )
@@ -41,3 +45,5 @@ _ITM_LM128 (const _ITM_TYPE_M128 *ptr)
 {
   GTM::GTM_LB (ptr, sizeof (*ptr));
 }
+
+#endif // __KNC__
