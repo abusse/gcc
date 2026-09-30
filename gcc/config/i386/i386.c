@@ -19314,7 +19314,7 @@ ix86_expand_move (machine_mode mode, rtx operands[])
   op1 = operands[1];
 
   if (TARGET_KNC
-      && (mode == SFmode || mode == DFmode)
+      && (mode == SFmode || mode == DFmode || mode == TFmode)
       && ((REG_P (op0)
 	   && MEM_P (op1)
 	   && MEM_ALIGN (op1) < GET_MODE_ALIGNMENT (mode))
@@ -19325,8 +19325,10 @@ ix86_expand_move (machine_mode mode, rtx operands[])
     {
       if (mode == SFmode)
 	emit_insn (gen_movmisalignsf (op0, op1));
-      else
+      else if (mode == DFmode)
 	emit_insn (gen_movmisaligndf (op0, op1));
+      else
+	emit_insn (gen_movmisaligntf (op0, op1));
       return;
     }
 
@@ -19484,7 +19486,7 @@ ix86_expand_move (machine_mode mode, rtx operands[])
 	}
 
       if (TARGET_KNC
-	  && (mode == SFmode || mode == DFmode)
+	  && (mode == SFmode || mode == DFmode || mode == TFmode)
 	  && ((REG_P (op0)
 	       && MEM_P (op1)
 	       && MEM_ALIGN (op1) < GET_MODE_ALIGNMENT (mode))
@@ -19495,8 +19497,10 @@ ix86_expand_move (machine_mode mode, rtx operands[])
 	{
 	  if (mode == SFmode)
 	    emit_insn (gen_movmisalignsf (op0, op1));
-	  else
+	  else if (mode == DFmode)
 	    emit_insn (gen_movmisaligndf (op0, op1));
+	  else
+	    emit_insn (gen_movmisaligntf (op0, op1));
 	  return;
 	}
     }
