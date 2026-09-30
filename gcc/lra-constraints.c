@@ -3565,9 +3565,20 @@ curr_insn_transform (bool check_only_p)
        we chose previously may no longer be valid.  */
     lra_set_used_insn_alternative (curr_insn, -1);
 
-  if (! check_only_p && curr_insn_set != NULL_RTX
-      && check_and_process_move (&change_p, &sec_mem_p))
-    return change_p;
+  if (! check_only_p && curr_insn_set != NULL_RTX)
+    {
+      /* check_and_process_move can replace the insn by a secondary
+	 reload sequence and delete it, dropping the address reloads
+	 made above: emit them first.  */
+      if (before != NULL)
+	{
+	  lra_process_new_insns (curr_insn, before, NULL,
+				 "Inserting address reload before");
+	  before = NULL;
+	}
+      if (check_and_process_move (&change_p, &sec_mem_p))
+	return change_p;
+    }
 
  try_swapped:
 
