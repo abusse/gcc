@@ -710,6 +710,11 @@ LIBGFOR_CHECK_UNLINK_OPEN_FILE
 # Check whether line terminator is LF or CRLF
 LIBGFOR_CHECK_CRLF
 
+# KNC has none of these, but the k1om assembler takes some of the
+# AVX-512 forms the probes use.
+case "$target" in
+  k1om-*) ;;
+  *)
 # Check whether we support AVX extensions
 LIBGFOR_CHECK_AVX
 
@@ -724,6 +729,8 @@ LIBGFOR_CHECK_FMA3
 
 # Check for FMA4 extensions
 LIBGFOR_CHECK_FMA4
+    ;;
+esac
 
 # Check if AVX128 works
 LIBGFOR_CHECK_AVX128
