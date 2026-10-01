@@ -20550,9 +20550,13 @@ static reg_class_t
 ix86_secondary_reload (bool in_p, rtx x, reg_class_t rclass,
 		       machine_mode mode, secondary_reload_info *sri)
 {
+  /* Only a value in a register needs the copy through memory; a pseudo
+     without a hard register (e.g. LRA's own secondary memory) is memory
+     already and loads directly.  */
   if (TARGET_KNC
       && in_p
       && REG_P (x)
+      && true_regnum (x) >= 0
       && SSE_CLASS_P (rclass)
       && mode == TImode)
     {
