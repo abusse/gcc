@@ -60,7 +60,19 @@ void __sfp_handle_exceptions (int);
       __sfp_handle_exceptions (_fex);		\
   } while (0);
 
+#ifdef __KNC__
+/* KNC's MXCSR has no exception mask bits (loading them faults), so it
+   reads as all exceptions unmasked; take the trap state from the x87
+   control word, whose low six bits have the same layout.  */
+# define FP_TRAPPING_EXCEPTIONS					\
+  ({								\
+    unsigned short int __knc_cw;				\
+    __asm__ __volatile__ ("fnstcw\t%0" : "=m" (__knc_cw));	\
+    (~__knc_cw) & FP_EX_ALL;					\
+  })
+#else
 #define FP_TRAPPING_EXCEPTIONS ((~_fcw >> FP_EX_SHIFT) & FP_EX_ALL)
+#endif
 
 #define FP_ROUNDMODE		(_fcw & FP_RND_MASK)
 #endif
