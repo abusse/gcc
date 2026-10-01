@@ -230,7 +230,9 @@
 	  && (<MODE>mode != DImode
 	      || MEM_ALIGN (operands[1]) != GET_MODE_ALIGNMENT (SImode))))
     {
-      rtx mem = assign_386_stack_local (<MODE>mode, SLOT_TEMP);
+      /* A pseudo the register allocator has to put in a stack slot of
+	 its own; a fixed frame slot here was not eliminated correctly.  */
+      rtx mem = gen_reg_rtx (<MODE>mode);
       emit_insn (gen_knc_movmisalign<mode> (operands[0], operands[1],
 					    mem));
       DONE;
@@ -240,9 +242,10 @@
 (define_insn_and_split "knc_movmisaligntf"
   [(set (match_operand:TF 0 "nonimmediate_operand" "=v,m")
 	(unspec:TF [
-	  (match_operand:TF 1 "nonimmediate_operand" "m,v")
-	  (clobber (match_operand:TF 2 "memory_operand" "=m,m"))
-	  (clobber (match_scratch:DI 3 "=&r,&r")) ] UNSCPEC_KNC_NO_SEC_RELOAD))]
+	  (match_operand:TF 1 "nonimmediate_operand" "m,v")]
+	  UNSCPEC_KNC_NO_SEC_RELOAD))
+   (clobber (match_operand:TF 2 "nonimmediate_operand" "=m,m"))
+   (clobber (match_scratch:DI 3 "=&r,&r"))]
   "TARGET_KNC"
   "#"
   "&& reload_completed"
@@ -253,9 +256,10 @@
 (define_insn_and_split "knc_movmisalign<mode>"
   [(set (match_operand:KNC_MOVMISALIGN_NOTF_MODE 0 "nonimmediate_operand" "=r,m,v,m")
 	(unspec:KNC_MOVMISALIGN_NOTF_MODE [
-	  (match_operand:KNC_MOVMISALIGN_NOTF_MODE 1 "nonimmediate_operand" "m,r,m,v")
-          (clobber (match_operand:KNC_MOVMISALIGN_NOTF_MODE 2 "memory_operand" "=m,m,m,m"))
-          (clobber (match_scratch:<knc_movmisalign_int_mode> 3 "=&r,&r,&r,&r")) ] UNSCPEC_KNC_NO_SEC_RELOAD))]
+	  (match_operand:KNC_MOVMISALIGN_NOTF_MODE 1 "nonimmediate_operand" "m,r,m,v")]
+	  UNSCPEC_KNC_NO_SEC_RELOAD))
+   (clobber (match_operand:KNC_MOVMISALIGN_NOTF_MODE 2 "nonimmediate_operand" "=m,m,m,m"))
+   (clobber (match_scratch:<knc_movmisalign_int_mode> 3 "=&r,&r,&r,&r"))]
   "TARGET_KNC"
   "#"
   "&& reload_completed"
