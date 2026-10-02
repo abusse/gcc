@@ -36,12 +36,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #undef ASM_SPEC
 #define ASM_SPEC "%{" SPEC_32 ":--32} %{" SPEC_64 ":--march=k1om}"
 
+/* x86-64's link spec (static-pie included) with the k1om emulation.  */
+#undef GNU_USER_LINK_EMULATION64
+#define GNU_USER_LINK_EMULATION64 "elf_k1om"
 #undef	LINK_SPEC
-#define LINK_SPEC "%{" SPEC_64 ":-m elf_k1om} %{" SPEC_32 ":-m elf_i386} \
-  %{shared:-shared} \
-  %{!shared: \
-    %{!static: \
-      %{rdynamic:-export-dynamic} \
-      %{" SPEC_32 ":-dynamic-linker " GLIBC_DYNAMIC_LINKER32 "} \
-      %{" SPEC_64 ":-dynamic-linker " GLIBC_DYNAMIC_LINKER64 "}} \
-    %{static:-static}}"
+#define LINK_SPEC GNU_USER_TARGET_LINK_SPEC
