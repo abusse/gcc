@@ -596,6 +596,12 @@ i[34567]86-*-kfreebsd*-gnu | i[34567]86-*-knetbsd*-gnu | i[34567]86-*-gnu* | i[3
 x86_64-*-linux* | k1om-*-linux*)
 	extra_parts="$extra_parts crtprec32.o crtprec64.o crtprec80.o crtfastmath.o"
 	tmake_file="${tmake_file} i386/t-crtpc i386/t-crtfm i386/t-crtstuff t-dfprules"
+	case ${host} in
+	k1om-*)
+		# KNC has no SSE: build crtfastmath without -msse.
+		tmake_file=`echo "${tmake_file}" | sed 's,i386/t-crtfm,t-crtfm,'`
+		;;
+	esac
 	tm_file="${tm_file} i386/elf-lib.h"
 	md_unwind_header=i386/linux-unwind.h
 	;;
@@ -1346,7 +1352,7 @@ esac
 case ${host} in
 x86_64-k1om-linux* | k1om-*-linux*)
 	extra_parts="$extra_parts crtprec32.o crtprec64.o crtprec80.o crtfastmath.o"
-	tmake_file="${tmake_file} i386/32/t-softfp i386/t-crtpc i386/t-crtfm i386/t-crtstuff t-dfprules t-fpbit"
+	tmake_file="${tmake_file} i386/32/t-softfp i386/t-crtpc t-crtfm i386/t-crtstuff t-dfprules t-fpbit"
 	tm_file="${tm_file} i386/elf-lib.h"
 	md_unwind_header=i386/linux-unwind.h
 esac
