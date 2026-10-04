@@ -7166,7 +7166,18 @@ ix86_emit_save_reg_using_mov (machine_mode mode, unsigned int regno,
   gcc_assert (! (cfa_offset & (align / BITS_PER_UNIT - 1)));
   set_mem_align (mem, align);
 
-  insn = emit_insn (gen_rtx_SET (mem, reg));
+  if (TARGET_KNC && SSE_REGNO_P (regno))
+    {
+      /* KNC stores a vector register only under a mask (k2, loaded by
+	 ix86_emit_save_sse_regs_using_mov); describe the save for the
+	 unwinder as the plain move.  */
+      insn = emit_insn (gen_knc_storeti (adjust_address (mem, TImode, 0),
+					gen_rtx_REG (TImode, regno),
+					gen_rtx_REG (HImode, MASK2_REG)));
+      add_reg_note (insn, REG_FRAME_RELATED_EXPR, gen_rtx_SET (mem, reg));
+    }
+  else
+    insn = emit_insn (gen_rtx_SET (mem, reg));
   RTX_FRAME_RELATED_P (insn) = 1;
 
   base = addr;
@@ -7243,6 +7254,18 @@ static void
 ix86_emit_save_sse_regs_using_mov (HOST_WIDE_INT cfa_offset)
 {
   unsigned int regno;
+
+  if (TARGET_KNC)
+    for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
+      if (SSE_REGNO_P (regno) && ix86_save_reg (regno, true, true))
+	{
+	  /* Mask for the KNC stores: two quadwords.  R11 is free in the
+	     prologue under both calling conventions.  */
+	  rtx scratch = gen_rtx_REG (HImode, R11_REG);
+	  emit_move_insn (scratch, GEN_INT (3));
+	  emit_move_insn (gen_rtx_REG (HImode, MASK2_REG), scratch);
+	  break;
+	}
 
   for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
     if (SSE_REGNO_P (regno) && ix86_save_reg (regno, true, true))
@@ -9125,12 +9148,12 @@ ix86_emit_restore_sse_regs_using_mov (HOST_WIDE_INT cfa_offset,
   for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
     if (SSE_REGNO_P (regno) && ix86_save_reg (regno, maybe_eh_return, true))
       {
-	rtx reg = gen_rtx_REG (V4SFmode, regno);
+	rtx reg = gen_rtx_REG (TARGET_KNC ? TImode : V4SFmode, regno);
 	rtx mem;
 	unsigned int align = GET_MODE_ALIGNMENT (V4SFmode);
 
 	mem = choose_baseaddr (cfa_offset, &align);
-	mem = gen_rtx_MEM (V4SFmode, mem);
+	mem = gen_rtx_MEM (TARGET_KNC ? TImode : V4SFmode, mem);
 
 	/* The location aligment depends upon the base register.  */
 	align = MIN (GET_MODE_ALIGNMENT (V4SFmode), align);
