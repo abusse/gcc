@@ -17701,7 +17701,8 @@ else
   ARCH_ARM_FALSE=
 fi
 
- if test "$ARCH" = x86; then
+# k1om (KNC) has neither the SSE nor the AVX the x86 barrier files need.
+ if test "$ARCH" = x86 && test "$target_cpu" != k1om; then
   ARCH_X86_TRUE=
   ARCH_X86_FALSE='#'
 else

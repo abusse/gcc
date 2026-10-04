@@ -286,7 +286,8 @@ fi
 AC_SUBST(link_itm)
 
 AM_CONDITIONAL([ARCH_ARM], [test "$ARCH" = arm])
-AM_CONDITIONAL([ARCH_X86], [test "$ARCH" = x86])
+# k1om (KNC) has neither the SSE nor the AVX the x86 barrier files need.
+AM_CONDITIONAL([ARCH_X86], [test "$ARCH" = x86 && test "$target_cpu" != k1om])
 AM_CONDITIONAL([ARCH_X86_AVX], [test "$libitm_cv_as_avx" = yes])
 AM_CONDITIONAL([ARCH_FUTEX], [test $enable_linux_futex = yes])
 
