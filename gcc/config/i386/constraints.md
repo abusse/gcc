@@ -473,3 +473,9 @@
    (i.e. APX NDD/NF) check."
   (and (match_operand 0 "apx_evex_memory_operand")
 	   (match_test "offsettable_nonstrict_memref_p (op)")))
+
+;; KNC moves a vector register to or from memory only at an aligned address.
+(define_special_memory_constraint "BK"
+  "@internal Memory operand, aligned to its mode on KNC."
+  (and (match_operand 0 "memory_operand")
+       (match_test "!TARGET_KNC || !misaligned_operand (op, GET_MODE (op))")))
