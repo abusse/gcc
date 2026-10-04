@@ -299,3 +299,9 @@
 (define_address_constraint "Tb"
   "MPX address operand without base"
   (match_operand 0 "address_mpx_no_base_operand"))
+
+;; KNC moves a vector register to or from memory only at an aligned address.
+(define_special_memory_constraint "BK"
+  "@internal Memory operand, aligned to its mode on KNC."
+  (and (match_operand 0 "memory_operand")
+       (match_test "!TARGET_KNC || !misaligned_operand (op, GET_MODE (op))")))
