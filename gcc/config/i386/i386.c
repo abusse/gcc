@@ -5428,6 +5428,12 @@ ix86_option_override_internal (bool main_args_p,
 	}
     }
 
+  /* KNC has none of the SSE, AVX or MMX instruction sets: refuse them
+     when asked for, so that configure probes for them fail.  */
+  if (main_args_p && TARGET_KNC
+      && (opts->x_ix86_isa_flags & (OPTION_MASK_ISA_SSE | OPTION_MASK_ISA_MMX)))
+    error ("SSE, AVX and MMX instructions are not supported for KNC");
+
   /* For sane SSE instruction set generation we need fcomi instruction.
      It is safe to enable all CMOVE instructions.  Also, RDRAND intrinsic
      expands to a sequence that includes conditional move. */
@@ -6401,6 +6407,20 @@ ix86_valid_target_attribute_p (tree fndecl,
 
   if (new_target == error_mark_node)
     ret = false;
+
+  /* Likewise for a function asking for them, unless a #pragma GCC target
+     (as in <immintrin.h>) is in effect: the front end merges its options
+     into the attribute.  Functions using such intrinsics then fail to
+     inline.  */
+  else if (current_target_pragma == NULL_TREE
+	   && (func_options.x_ix86_isa_flags & OPTION_MASK_ISA_KNC)
+	   && (func_options.x_ix86_isa_flags
+	       & (OPTION_MASK_ISA_SSE | OPTION_MASK_ISA_MMX)))
+    {
+      error_at (fndecl ? DECL_SOURCE_LOCATION (fndecl) : input_location,
+		"SSE, AVX and MMX instructions are not supported for KNC");
+      ret = false;
+    }
 
   else if (fndecl && new_target)
     {
